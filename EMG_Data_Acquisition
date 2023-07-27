@@ -1,0 +1,60 @@
+clc;
+clear all;
+close all;
+
+%Serial Port settings
+port = "COM3";     %Set the port number
+baudRate = 115200;    %setting the baudRate	
+terminator = "LF";  %Set the terminator 
+
+%Number of EMG channels
+numChannels = 6;
+
+%Data acquisition parameters
+Fs = 1000;      %set the desired sampe rate
+duration = 100;
+numSamples = Fs*duration;
+
+% Inititate the data matrix
+data = zeros(numSamples, numChannels);
+
+%Create serial port object
+s = serialport(port, baudRate);
+configureTerminator(s, terminator);
+
+%Clear the serial port
+flush(s);
+
+%Start Data Acquisition
+disp("Data Acquisition started...");
+
+tic;        %Start timer
+
+for i = 1:numSamples
+    receivedData = readline(s);
+
+    data(i, :) = str2double(receivedData);	
+end
+
+elapsedTime = toc;
+disp("Data Acquisition completed")
+
+%Close the serial port
+clear s;        
+
+%Save the Acquired data to a text 
+fileName = 'emg_data2.txt';
+fid = fopen(fileName, 'w')
+fprintf(fid, '%s/na', data);	
+fclose(fid);
+
+%Plotting the EMG signals
+t = (0:numSamples-1) / Fs;
+figure;
+for ch = 1:numChannels
+    subplot(numChannels, 1, ch);
+    plot(t, data(:,ch));
+    xlabel('Time(s)');
+    ylabel('Amplitude');
+    title(['EMG Channel', num2str(ch)]);
+end 
